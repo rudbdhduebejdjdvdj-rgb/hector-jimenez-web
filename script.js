@@ -1,2 +1,49 @@
-const menuButton=document.querySelector('.menu-toggle'),siteNav=document.querySelector('.nav');if(menuButton&&siteNav){menuButton.addEventListener('click',()=>{const open=siteNav.classList.toggle('open');menuButton.setAttribute('aria-expanded',String(open));menuButton.textContent=open?'×':'☰'});siteNav.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{siteNav.classList.remove('open');menuButton.setAttribute('aria-expanded','false');menuButton.textContent='☰'}));}
-(()=>{const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;const header=document.querySelector('.topbar');const onScroll=()=>{if(header)header.classList.toggle('scrolled',window.scrollY>12)};onScroll();window.addEventListener('scroll',onScroll,{passive:true});if(reduce){document.querySelectorAll('.motion-in,.motion-left,.motion-scale').forEach(el=>el.classList.add('is-visible'));return;}const selectors=['main>section','main>.subpage>h1','main>.subpage>.page-lead','main>.subpage>.simple-list article','main>.subpage>.portfolio-grid article','main>.subpage>.plans article','main>.subpage>.disclaimer','.home-copy>*','.home-image','.home-intro>*','.mini-projects>a','.home-contact>*','.work-item','.study-section>*','.agent-row','.principle','.flowstep','.study-cta'];const nodes=[...new Set(selectors.flatMap(s=>Array.from(document.querySelectorAll(s))))];nodes.forEach((el,i)=>{if(el.classList.contains('reveal')||el.closest('.reveal'))return;el.classList.add('motion-in');if(i%7===3)el.classList.add('motion-scale')});document.body.classList.add('motion-ready');if(!('IntersectionObserver'in window)){nodes.forEach(el=>el.classList.add('is-visible'));return}const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}}),{threshold:.12,rootMargin:'0px 0px -35px 0px'});nodes.forEach(el=>observer.observe(el));})();
+const $=(s,root=document)=>root.querySelector(s);
+const $$=(s,root=document)=>[...root.querySelectorAll(s)];
+const header=$('.site-header'),menu=$('#menuToggle'),nav=$('#mainNav');
+const updateHeader=()=>header?.classList.toggle('scrolled',window.scrollY>15);
+updateHeader();window.addEventListener('scroll',updateHeader,{passive:true});
+menu?.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));menu.textContent=open?'×':'☰';});
+$$('#mainNav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu?.setAttribute('aria-expanded','false');if(menu)menu.textContent='☰';}));
+$('#year').textContent=new Date().getFullYear();
+
+const euro=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+const basePrices={landing:650,business:1100,store:1800,webapp:2600,ai:1500,custom:1800};
+const pageFactors={landing:0,business:90,store:130,webapp:180,ai:120,custom:150};
+const form=$('#quoteForm'),range=$('#quoteRange'),note=$('#quoteNote');
+const typeNames={landing:'Landing page',business:'Web para empresa',store:'Tienda online',webapp:'Aplicación web / dashboard',ai:'Sistema con IA o automatización',custom:'Proyecto a medida'};
+const designNames={standard:'Limpio y profesional',premium:'Premium a medida',art:'Dirección creativa avanzada'};
+function getQuote(){
+ const type=$('#projectType').value,pages=Number($('#pages').value),design=$('#design').value;
+ const extras=$$('input[name="features"]:checked',form).reduce((sum,input)=>sum+Number(input.dataset.price),0);
+ const factor={standard:.85,premium:1.18,art:1.5}[design];
+ const pageCost=type==='landing'?0:Math.max(0,pages-1)*(pageFactors[type]||120);
+ const raw=(basePrices[type]+pageCost+extras)*factor;
+ const low=Math.max(350,Math.round(raw*.88/50)*50),high=Math.max(500,Math.round(raw*1.18/50)*50);
+ return{low,high,type,pages,design,features:$$('input[name="features"]:checked',form).map(i=>i.value),details:$('#details').value.trim()};
+}
+function updateQuote(){const q=getQuote();range.textContent=euro(q.low)+' – '+euro(q.high);note.textContent='Estimación orientativa, sin IVA · '+(q.features.length?q.features.length+' extras seleccionados':'sin extras adicionales');return q;}
+form.addEventListener('input',updateQuote);form.addEventListener('change',updateQuote);updateQuote();
+function quoteSummary(q){return['PROYECTO: '+typeNames[q.type],'PÁGINAS: '+q.pages,'DISEÑO: '+designNames[q.design],'FUNCIONALIDADES: '+(q.features.join(', ')||'No especificadas'),'DETALLES: '+(q.details||'Pendiente de definir'),'ESTIMACIÓN: '+euro(q.low)+' – '+euro(q.high)+' (sin IVA, orientativa)'].join('\n');}
+$('#copyQuote').addEventListener('click',async()=>{const b=$('#copyQuote');try{await navigator.clipboard.writeText(quoteSummary(getQuote()));b.textContent='Resumen copiado ✓';setTimeout(()=>b.textContent='Copiar resumen',1800);}catch{b.textContent='No se pudo copiar';}});
+const aiButton=$('#aiQuoteButton'),aiBox=$('#aiResult'),aiText=$('#aiText');
+form.addEventListener('submit',async e=>{
+ e.preventDefault();const q=updateQuote();aiButton.disabled=true;aiButton.innerHTML='Analizando <span>◌</span>';aiBox.hidden=false;$('#aiStatus').textContent='PROCESANDO';
+ aiText.textContent='Estoy revisando el alcance, las funcionalidades y los puntos que conviene definir.';
+ try{
+  const response=await fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:typeNames[q.type],pages:q.pages,design:designNames[q.design],features:q.features,details:q.details,range:euro(q.low)+' – '+euro(q.high)})});
+  const data=await response.json();if(!response.ok)throw new Error(data.error||'No se pudo conectar con el análisis IA.');
+  aiText.replaceChildren();String(data.analysis||'La estimación está preparada.').split('\n').filter(Boolean).forEach(line=>{const p=document.createElement('p');p.textContent=line;aiText.appendChild(p);});
+  $('#aiStatus').textContent='ANÁLISIS LISTO';
+ }catch(error){aiText.textContent=error.message+' Puedes seguir utilizando la estimación automática y copiar el resumen.';$('#aiStatus').textContent='MODO ESTIMACIÓN';}
+ finally{aiButton.disabled=false;aiButton.innerHTML='Analizar con IA <span>✳</span>';}
+});
+$('#contactForm').addEventListener('submit',e=>{
+ e.preventDefault();const name=$('#contactName').value.trim(),email=$('#contactEmail').value.trim(),message=$('#contactMessage').value.trim();
+ const subject=encodeURIComponent('Nueva consulta desde la web — '+name),body=encodeURIComponent('Nombre: '+name+'\nEmail: '+email+'\n\n'+message);
+ window.location.href='mailto:alejandro.87.estevez@gmail.com?subject='+subject+'&body='+body;
+ $('#contactFeedback').textContent='Si no se abre tu correo, escribe directamente a alejandro.87.estevez@gmail.com';
+});
+const revealObserver=('IntersectionObserver'in window)?new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');revealObserver.unobserve(entry.target);}}),{threshold:.12}):null;
+const revealNodes=$$('.work-card,.capability-list article,.process-grid article,.section-top,.manifesto-copy,.contact-left,.estimator-card');
+if(revealObserver){revealNodes.forEach(el=>{el.classList.add('reveal');revealObserver.observe(el);});}else{revealNodes.forEach(el=>el.classList.add('visible'));}
