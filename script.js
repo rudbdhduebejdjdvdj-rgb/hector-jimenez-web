@@ -47,3 +47,27 @@ $('#contactForm').addEventListener('submit',e=>{
 const revealObserver=('IntersectionObserver'in window)?new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');revealObserver.unobserve(entry.target);}}),{threshold:.12}):null;
 const revealNodes=$$('.work-card,.capability-list article,.process-grid article,.section-top,.manifesto-copy,.contact-left,.estimator-card');
 if(revealObserver){revealNodes.forEach(el=>{el.classList.add('reveal');revealObserver.observe(el);});}else{revealNodes.forEach(el=>el.classList.add('visible'));}
+
+
+// Mascota conversacional Piña: asistente de presupuestos
+(()=>{
+ const launcher=$('#petLauncher'),panel=$('#petPanel'),close=$('#petClose'),petForm=$('#petForm'),input=$('#petInput'),messages=$('#petMessages'),send=$('#petSend');
+ if(!launcher||!panel||!petForm)return;
+ const open=()=>{panel.hidden=false;launcher.setAttribute('aria-expanded','true');input.focus();};
+ const shut=()=>{panel.hidden=true;launcher.setAttribute('aria-expanded','false');};
+ launcher.addEventListener('click',()=>panel.hidden?open():shut());close.addEventListener('click',shut);
+ const add=(text,who='bot')=>{const el=document.createElement('div');el.className='pet-message pet-'+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el;};
+ messages.querySelectorAll('[data-prompt]').forEach(btn=>btn.addEventListener('click',()=>{input.value=btn.dataset.prompt;input.focus();}));
+ petForm.addEventListener('submit',async e=>{
+  e.preventDefault();const details=input.value.trim();if(!details)return;
+  add(details,'user');input.value='';send.disabled=true;const thinking=add('¡Genial! Estoy pensando cómo plantear tu proyecto…','bot');
+  try{
+   const response=await fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:'Proyecto a medida',pages:'Por definir',design:'A medida',features:[],details,range:'Pendiente de definir'})});
+   const data=await response.json();if(!response.ok)throw new Error(data.error||'No he podido conectar con mi asistente.');
+   thinking.textContent='¡Ya tengo una primera orientación!';
+   const result=document.createElement('div');result.className='pet-message pet-bot pet-analysis';result.textContent=data.analysis;messages.appendChild(result);
+   const action=document.createElement('button');action.type='button';action.className='pet-estimator-link';action.textContent='Abrir calculador detallado ↗';action.addEventListener('click',()=>{shut();document.querySelector('#estimator')?.scrollIntoView({behavior:'smooth'});});messages.appendChild(action);
+  }catch(err){thinking.textContent=err.message+' También puedes usar el calculador detallado de la página.';}
+  finally{send.disabled=false;messages.scrollTop=messages.scrollHeight;}
+ });
+})();
