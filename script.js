@@ -31,7 +31,7 @@ form.addEventListener('submit',async e=>{
  e.preventDefault();const q=updateQuote();aiButton.disabled=true;aiButton.innerHTML='Analizando <span>◌</span>';aiBox.hidden=false;$('#aiStatus').textContent='PROCESANDO';
  aiText.textContent='Estoy revisando el alcance, las funcionalidades y los puntos que conviene definir.';
  try{
-  const response=await fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:typeNames[q.type],pages:q.pages,design:designNames[q.design],features:q.features,details:q.details,range:euro(q.low)+' – '+euro(q.high)})});
+  const response=await fetch('https://hector-jimenez-web.vercel.app/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:typeNames[q.type],pages:q.pages,design:designNames[q.design],features:q.features,details:q.details,range:euro(q.low)+' – '+euro(q.high)})});
   const data=await response.json();if(!response.ok)throw new Error(data.error||'No se pudo conectar con el análisis IA.');
   aiText.replaceChildren();String(data.analysis||'La estimación está preparada.').split('\n').filter(Boolean).forEach(line=>{const p=document.createElement('p');p.textContent=line;aiText.appendChild(p);});
   $('#aiStatus').textContent='ANÁLISIS LISTO';
@@ -62,7 +62,7 @@ if(revealObserver){revealNodes.forEach(el=>{el.classList.add('reveal');revealObs
   e.preventDefault();const details=input.value.trim();if(!details)return;
   add(details,'user');input.value='';send.disabled=true;const thinking=add('¡Genial! Estoy pensando cómo plantear tu proyecto…','bot');
   try{
-   const response=await fetch('/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:'Proyecto a medida',pages:'Por definir',design:'A medida',features:[],details,range:'Pendiente de definir'})});
+   const response=await fetch('https://hector-jimenez-web.vercel.app/api/estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:'Proyecto a medida',pages:'Por definir',design:'A medida',features:[],details,range:'Pendiente de definir'})});
    const data=await response.json();if(!response.ok)throw new Error(data.error||'No he podido conectar con mi asistente.');
    thinking.textContent='¡Ya tengo una primera orientación!';
    const result=document.createElement('div');result.className='pet-message pet-bot pet-analysis';result.textContent=data.analysis;messages.appendChild(result);
