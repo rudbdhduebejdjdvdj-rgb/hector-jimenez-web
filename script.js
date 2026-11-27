@@ -15,7 +15,7 @@ const typeNames={landing:'Landing page',business:'Web para empresa',store:'Tiend
 const designNames={standard:'Limpio y profesional',premium:'Premium a medida',art:'Dirección creativa avanzada'};
 function getQuote(){
  const type=$('#projectType').value,pages=Number($('#pages').value),design=$('#design').value;
- const extras=$('input[name="features"]:checked',form).reduce((sum,input)=>sum+Number(input.dataset.price),0);
+ const extras=$$('input[name="features"]:checked',form).reduce((sum,input)=>sum+Number(input.dataset.price),0);
  const factor={standard:.85,premium:1.18,art:1.5}[design];
  const pageCost=type==='landing'?0:Math.max(0,pages-1)*(pageFactors[type]||120);
  const raw=(basePrices[type]+pageCost+extras)*factor;
@@ -23,7 +23,7 @@ function getQuote(){
  const includeDomain=$('#includeDomain')?.checked||false;
  const extension=$('#domainExtension')?.value||'com';
  const provider=$('#emailProvider')?.value||'google';
- return{low,high,type,pages,design,features:$('input[name="features"]:checked',form).map(i=>i.value),details:$('#details').value.trim(),includeDomain,extension,provider};
+ return{low,high,type,pages,design,features:$$('input[name="features"]:checked',form).map(i=>i.value),details:$('#details').value.trim(),includeDomain,extension,provider};
 }
 function updateDomainCosts(q){
  const options=$('#domainAddonOptions');if(!options)return;
