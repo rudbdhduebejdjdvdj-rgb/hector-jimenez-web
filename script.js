@@ -45,7 +45,7 @@ function updateQuote(){
  updateDomainCosts(q);return q;
 }
 form.addEventListener('input',updateQuote);form.addEventListener('change',updateQuote);updateQuote();
-function quoteSummary(q){return['PROYECTO: '+typeNames[q.type],'PÁGINAS: '+q.pages,'DISEÑO: '+designNames[q.design],'FUNCIONALIDADES: '+(q.features.join(', ')||'No especificadas'),'DETALLES: '+(q.details||'Pendiente de definir'),'ESTIMACIÓN: '+euro(q.low)+' – '+euro(q.high)+' (sin IVA, orientativa)'].join('\n');}
+function quoteSummary(q){return['PROYECTO: '+typeNames[q.type],'PÁGINAS: '+q.pages,'DISEÑO: '+designNames[q.design],'FUNCIONALIDADES: '+(q.features.join(', ')||'No especificadas'),'DETALLES: '+(q.details||'Pendiente de definir'),'DOMINIO Y CORREO: '+(q.includeDomain?('.'+q.extension+' · '+(q.provider==='google'?'Google Workspace Starter':'Zoho Mail')):'No añadidos'),'ESTIMACIÓN: '+euro(q.low)+' – '+euro(q.high)+' (sin IVA, orientativa)'].join('\n');}
 $('#copyQuote').addEventListener('click',async()=>{const b=$('#copyQuote');try{await navigator.clipboard.writeText(quoteSummary(getQuote()));b.textContent='Resumen copiado ✓';setTimeout(()=>b.textContent='Copiar resumen',1800);}catch{b.textContent='No se pudo copiar';}});
 const aiButton=$('#aiQuoteButton'),aiBox=$('#aiResult'),aiText=$('#aiText');
 form.addEventListener('submit',async e=>{
