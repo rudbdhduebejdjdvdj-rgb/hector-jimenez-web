@@ -2,21 +2,26 @@ const hits = new Map();
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  const allowedOrigins = new Set([
+    "https://rudbdhduebejdjdvdj-rgb.github.io",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+  ]);
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  }
+  if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Método no permitido." });
   }
 
-  const origin = req.headers.origin;
-  const host = req.headers.host;
-  if (origin && host) {
-    try {
-      if (new URL(origin).host !== host) {
-        return res.status(403).json({ error: "Origen no autorizado." });
-      }
-    } catch {
-      return res.status(403).json({ error: "Origen no autorizado." });
-    }
+  if (origin && !allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: "Origen no autorizado." });
   }
 
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
