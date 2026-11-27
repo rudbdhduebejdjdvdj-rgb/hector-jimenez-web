@@ -82,27 +82,37 @@ async function requestOverpass(query){
  return null;
 }
 async function loadCityData(){
- if(osmBusy){while(osmBusy)await new Promise(resolve=>setTimeout(resolve,200));return}
- if(map.getZoom()<14){osmLog('Acerca el mapa hasta zoom 14 o superior para cargar edificios y calles.','alert');return}
+ if(osmBusy){
+  while(osmBusy)await new Promise(resolve=>setTimeout(resolve,250));
+  if(roadWays.length||buildingData.length){drawBuildings();return}
+ }
+ if(map.getZoom()<14){osmLog('Acerca el mapa hasta zoom 14 o superior para descargar datos urbanos.','alert');return}
  osmBusy=true;
  try{
-  const bounds=map.getBounds().pad(.035),bbox=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()].join(',');
-  const buildingQuery='[out:json][timeout:18];way["building"]('+bbox+');out body geom;';
-  const roadQuery='[out:json][timeout:18];way["highway"]('+bbox+');out body geom;';
+  const bounds=map.getBounds().pad(.02),bbox=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()].join(',');
+  const buildingQuery='[out:json][timeout:12];way["building"]('+bbox+');out body geom;';
+  const roadQuery='[out:json][timeout:12];way["highway"~"residential|tertiary|secondary|primary|living_street|service|unclassified"]('+bbox+');out body geom;';
   const [buildingElements,roadElements]=await Promise.all([requestOverpass(buildingQuery),requestOverpass(roadQuery)]);
   if(buildingElements){
    const found=buildingElements.filter(e=>e.tags?.building&&e.geometry?.length>=4).map(e=>({geometry:e.geometry,tags:e.tags}));
    if(found.length)buildingData=found.slice(0,700);
-   drawBuildings();
-   osmLog(found.length+' edificios encontrados'+(found.length?' y dibujados.':'; no hay edificios etiquetados en esta zona/zoom.'),found.length?'good':'alert');
-  }else osmLog('No respondió ningún servidor para los edificios.','alert');
+   drawBuildings();osmLog(found.length+' edificios OSM cargados.',found.length?'good':'alert');
+  }else osmLog('Servidor OSM sin respuesta para edificios.','alert');
   if(roadElements){
    const foundRoads=roadElements.filter(e=>e.tags?.highway&&e.geometry?.length>=2).map(e=>e.geometry.map(p=>({lat:p.lat,lon:p.lon})));
    if(foundRoads.length)roadWays=foundRoads;
-   osmLog(foundRoads.length+' tramos de calles encontrados.',foundRoads.length?'good':'alert');
-  }else osmLog('No respondió ningún servidor para las calles.','alert');
- }catch(error){osmLog('Error de carga OSM: '+(error?.message||'desconocido'),'alert')}
+   osmLog(foundRoads.length+' tramos OSM de calles cargados.',foundRoads.length?'good':'alert');
+  }else osmLog('Servidor OSM sin respuesta para calles.','alert');
+ }catch(error){osmLog('Error OSM: '+(error?.message||'desconocido'),'alert')}
  finally{osmBusy=false}
+}
+function createFallbackRoads(){
+ const b=map.getBounds(),south=b.getSouth(),north=b.getNorth(),west=b.getWest(),east=b.getEast(),roads=[];
+ const latStep=Math.max(.0012,(north-south)/9),lngStep=Math.max(.0012,(east-west)/9);
+ for(let lat=south;lat<=north;lat+=latStep)roads.push([{lat,lng:west,lon:west},{lat,lng:east,lon:east}]);
+ for(let lon=west;lon<=east;lon+=lngStep)roads.push([{lat:south,lon},{lat:north,lon}]);
+ roadWays=roads;
+ osmLog('Modo de contingencia: rutas de simulación activadas. No son calles OSM reales.','alert');
 }
 function zombieSize(){return Math.max(6,Math.min(25,8*Math.pow(1.34,map.getZoom()-15)))}
 function zombieIcon(){const z=zombieSize();return L.divIcon({className:'',html:'<div style="width:'+z+'px;height:'+z+'px;border-radius:50%;background:#35e56a;border:1.5px solid #eaffee;box-shadow:0 0 7px #35e56a99"></div>',iconSize:[z,z],iconAnchor:[z/2,z/2]})}
@@ -158,18 +168,12 @@ map.on('click',e=>{let c=costs[mode]||0;if(money<c){log('Presupuesto insuficient
 }else if(mode==='evac'){m=put(e.latlng,'#61d6ff','E','Punto de evacuación');markers.push(m);log('Punto de evacuación habilitado.','good')}else if(mode==='air'){m=L.circle(e.latlng,{radius:180,color:'#ff625d',fillColor:'#ff625d',fillOpacity:.25}).addTo(map);markers.push(m);infected=Math.max(0,infected-3);log('Ataque aéreo ejecutado.','alert')}else if(['sniper','turret','mortar','guard'].includes(mode)){m=put(e.latlng,'#f2bd61','◆',labels[mode]);markers.push(m);units.push({lat:e.latlng.lat,lng:e.latlng.lng,type:mode});log(labels[mode]+' desplegado.','good')}else{m=put(e.latlng,'#a5e87a','+',labels[mode]);markers.push(m);log(labels[mode]+' instalado.','good')}update()});
 $('start').onclick=async()=>{
  if(running)return;
- if(!roadWays.length){
-  log('Comprobando la red de calles…');
-  await loadCityData();
- }
- if(!roadWays.length){
-  log('El servidor de mapas sigue ocupado. Espera unos segundos y vuelve a iniciar.','alert');
-  return;
- }
+ if(!roadWays.length){log('Intentando cargar la red de calles…');await loadCityData()}
+ if(!roadWays.length)createFallbackRoads();
  running=true;paused=false;day=1;infected=0;
  for(let i=0;i<8;i++)spawnZombie();
  infected=zombies.length;
- log('ALERTA ROJA: brote detectado. Los infectados avanzan por la red vial.','alert');
+ log('ALERTA ROJA: brote detectado. Simulación iniciada.','alert');
  update();
  if(timer)clearInterval(timer);
  timer=setInterval(()=>{
