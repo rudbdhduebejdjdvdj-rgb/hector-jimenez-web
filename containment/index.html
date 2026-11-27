@@ -31,13 +31,44 @@ body{background:radial-gradient(ellipse at 50% -25%,#263b46 0%,#0a1118 58%,#070c
 .hint{font-size:11px;line-height:1.65}.legend{padding:8px 2px;font-size:11px}
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:1/-1}#map{height:65vh}}
 @media(max-width:650px){.app{padding:9px}.top{padding:13px;border-radius:10px}.brand{font-size:16px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:last-child{grid-column:span 2}.stat strong{font-size:21px}.side{grid-template-columns:1fr}#map{height:58vh;min-height:420px}.maplabel{font-size:9px;max-width:calc(100% - 24px)}}
+
+/* Tactical command interface v2 */
+:root{--accent:#c8ff78;--amber:#ffbd59;--glass:rgba(9,17,23,.9)}
+body{background:radial-gradient(ellipse at 50% -30%,#314956 0%,#101c24 42%,#070d12 100%);letter-spacing:.01em}
+.app{max-width:1760px;padding:20px}
+.top{position:relative;overflow:hidden;border:1px solid #405864;border-radius:16px;padding:18px 22px;background:linear-gradient(115deg,#1b303b 0%,#101b23 65%,#14232a 100%);box-shadow:0 18px 55px #0007}
+.top:after{content:"";position:absolute;right:-50px;top:-110px;width:280px;height:280px;border:1px solid #c8ff7820;border-radius:50%;box-shadow:0 0 0 28px #c8ff7808,0 0 0 56px #c8ff7805;pointer-events:none}
+.brand{font-size:23px;letter-spacing:.17em}.sub{font-size:10px;margin-top:7px}
+.status{position:relative;z-index:1}.pill{border-radius:8px;background:#071117aa;border-color:#536873}
+.stats{gap:11px;margin:15px 0}.stat{border-radius:12px;padding:14px 16px;background:linear-gradient(145deg,#192a34,#101a21);box-shadow:0 8px 24px #0003}
+.stat small{font-size:9px;letter-spacing:.19em}.stat strong{font-size:26px;margin-top:5px}
+.layout{grid-template-columns:minmax(0,1fr) 360px;gap:15px}
+.mapbox{border-radius:15px;border-color:#516975;box-shadow:0 24px 70px #0008}
+#map{height:min(75vh,860px);min-height:560px}
+.maplabel{border-radius:9px;padding:11px 14px;letter-spacing:.14em;background:rgba(5,12,17,.88);border-color:#ffffff30;backdrop-filter:blur(14px)}
+.side{gap:12px}.panel{border-radius:13px;padding:16px;background:linear-gradient(145deg,#182a34,#101a22);box-shadow:0 10px 28px #0004}
+.ptitle{font-size:10px;letter-spacing:.2em;color:#d4e0e5}
+.tools{gap:8px}.tool{min-height:72px;border-radius:10px;padding:11px 12px;background:linear-gradient(145deg,#172832,#0d171e);border-color:#344b57}
+.tool b{font-size:12px;letter-spacing:.01em}.tool small{font-size:10px;color:#9eb0b9;margin-top:5px}
+.tool:hover{border-color:#93b18d;background:#1a2c2d}
+.tool.active{border-color:var(--accent);background:linear-gradient(145deg,#293d2a,#17271e);box-shadow:inset 0 0 0 1px #c8ff7830,0 0 20px #c8ff7818}
+.btn{border-radius:9px;padding:12px 15px;font-size:11px;letter-spacing:.07em}
+.btn.primary{color:#111b0b}
+.actions{gap:8px;margin:12px 0}
+.feed{height:190px;border-radius:10px;padding:11px;background:#070e13;border-color:#2b404b}
+.hint{font-size:11px;line-height:1.7;color:#9fb1ba}
+.legend{gap:14px;padding:10px 3px;color:#d0dce1}
+.placement-tip{display:flex;align-items:center;gap:10px;margin:0 0 11px;padding:11px 13px;border:1px solid #526c48;border-radius:10px;background:linear-gradient(100deg,#1b2b1c,#101c19);color:#e0f6ca;font-size:11px;line-height:1.5}
+.placement-tip b{color:var(--accent);letter-spacing:.1em}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.wide{grid-column:1/-1}#map{height:66vh}}
+@media(max-width:650px){.app{padding:9px}.top{padding:14px;border-radius:12px}.brand{font-size:16px}.status{gap:6px}.pill{padding:7px 8px;font-size:10px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.stat{padding:11px}.stat:last-child{grid-column:span 2}.stat strong{font-size:22px}.layout{gap:10px}.side{grid-template-columns:1fr}.panel{padding:13px}.tool{min-height:64px}#map{height:58vh;min-height:420px}.maplabel{font-size:9px;max-width:calc(100% - 24px)}.actions .btn{flex:1;min-width:42%}}
 </style></head><body><div class="app">
 <header class="top"><div><div class="brand">C<span>Ø</span>NTAINMENT <span style="color:#e8f0f3">/ PROTOCOLO CERO</span></div><div class="sub">CENTRO DE OPERACIONES · UNIDAD DE RESPUESTA TÁCTICA</div></div><div class="status"><div class="pill">SECTOR <b>GUADALAJARA</b></div><div class="pill">ESTADO <b id="state">PREPARACIÓN</b></div><div class="pill">DÍA <b id="day">01</b></div></div></header>
 <section class="stats"><div class="stat"><small>Presupuesto</small><strong id="money">€1.200</strong></div><div class="stat"><small>Civiles vivos</small><strong id="civ">180</strong></div><div class="stat"><small>Infectados</small><strong id="inf">0</strong></div><div class="stat"><small>Unidades</small><strong id="unitCount">0</strong></div><div class="stat"><small>Barreras</small><strong id="barCount">0</strong></div></section>
 <div class="layout"><main><div class="mapbox"><div class="maplabel">GUADALAJARA · CASTILLA-LA MANCHA · MAPA EN DIRECTO</div><div id="map"></div></div><div class="legend"><span>● Civiles: blancos</span><span style="color:#35e56a">● Zombis: verdes</span><span style="color:#61d6ff">● Zona segura: azul</span><span>◆ Unidades tácticas</span></div><div class="actions"><button class="btn primary" id="start">▶ INICIAR BROTE</button><button class="btn" id="pause">Ⅱ PAUSAR</button><button class="btn" id="speed">VELOCIDAD ×1</button><button class="btn danger" id="reset">↻ REINICIAR</button></div><p class="hint">Haz clic en el mapa para colocar la herramienta seleccionada. Puedes acercar, alejar y desplazarte por Guadalajara. El mapa satelital usa Esri; edificios 3D y trazados de calles se obtienen de OpenStreetMap.</p></main>
-<aside class="side"><section class="panel"><div class="ptitle">DESPLIEGUE DE CAMPO</div><div class="tools" id="units"><button class="tool active" data-tool="sniper"><b>⌖ Francotirador · €160</b><small>Largo alcance</small></button><button class="tool" data-tool="turret"><b>⊕ Torreta · €240</b><small>Fuego automático</small></button><button class="tool" data-tool="mortar"><b>◉ Morteros · €210</b><small>Daño de área</small></button><button class="tool" data-tool="guard"><b>▣ Guarnición · €130</b><small>Defensa móvil</small></button></div><p class="hint">Selecciona una unidad y colócala en el mapa.</p></section>
-<section class="panel"><div class="ptitle">INFRAESTRUCTURA</div><div class="tools"><button class="tool" data-tool="shelter"><b>⌂ Refugio · €100</b><small>Zona protegida</small></button><button class="tool" data-tool="hospital"><b>✚ Hospital · €180</b><small>Recuperación</small></button><button class="tool" data-tool="depot"><b>▣ Depósito · €140</b><small>Reabastecimiento</small></button><button class="tool" data-tool="safe"><b>◎ Zona segura · Gratis</b><small>Protege civiles</small></button></div></section>
-<section class="panel"><div class="ptitle">APOYO Y ÓRDENES</div><div class="tools"><button class="tool" data-tool="air"><b>✈ Ataque aéreo · €180</b><small>Solo durante el brote</small></button><button class="tool" data-tool="evac"><b>⬡ Evacuación · €120</b><small>Punto de extracción</small></button><button class="tool" data-tool="barricade"><b>▰ Barricada · €45</b><small>Bloquea el avance</small></button><button class="tool" data-tool="move"><b>⇢ Mover civiles</b><small>Ordena una evacuación local</small></button></div></section>
+<aside class="side"><section class="panel"><div class="ptitle">01 / DESPLIEGUE DE CAMPO</div><div class="tools" id="units"><button class="tool active" data-tool="sniper"><b>⌖ Francotirador · €160</b><small>Largo alcance</small></button><button class="tool" data-tool="turret"><b>⊕ Torreta · €240</b><small>Fuego automático</small></button><button class="tool" data-tool="mortar"><b>◉ Morteros · €210</b><small>Daño de área</small></button><button class="tool" data-tool="guard"><b>▣ Guarnición · €130</b><small>Defensa móvil</small></button></div><p class="hint">Selecciona una unidad y colócala en el mapa.</p></section>
+<section class="panel"><div class="ptitle">02 / INFRAESTRUCTURA</div><div class="tools"><button class="tool" data-tool="shelter"><b>⌂ Refugio · €100</b><small>Zona protegida</small></button><button class="tool" data-tool="hospital"><b>✚ Hospital · €180</b><small>Recuperación</small></button><button class="tool" data-tool="depot"><b>▣ Depósito · €140</b><small>Reabastecimiento</small></button><button class="tool" data-tool="safe"><b>◎ Zona segura · Gratis</b><small>Protege civiles</small></button></div></section>
+<section class="panel"><div class="ptitle">03 / APOYO Y ÓRDENES</div><div class="tools"><button class="tool" data-tool="air"><b>✈ Ataque aéreo · €180</b><small>Solo durante el brote</small></button><button class="tool" data-tool="evac"><b>⬡ Evacuación · €120</b><small>Punto de extracción</small></button><button class="tool" data-tool="barricade"><b>▰ Barricada · €45</b><small>Bloquea el avance</small></button><button class="tool" data-tool="move"><b>⇢ Mover civiles</b><small>Ordena una evacuación local</small></button></div></section>
 <section class="panel wide"><div class="ptitle">INFORME DE INTELIGENCIA</div><div class="feed" id="feed"><div class="good">[HQ] Centro de mando conectado.</div><div>[SAT] Sector de Guadalajara cargado.</div><div>[HQ] Esperando órdenes de despliegue.</div></div></section></aside></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 (()=>{const $=id=>document.getElementById(id);const map=L.map('map',{zoomControl:true,preferCanvas:true,zoomAnimation:false,fadeAnimation:false}).setView([40.6333,-3.1667],15);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'}).addTo(map);
@@ -127,25 +158,20 @@ function spawnZombie(){
 }
 function moveZombieOnStreet(z){
  if(!z.way||z.way.length<2)return;
- let remaining=.0000065*speed;
- let guard=0;
- while(remaining>0&&guard++<8){
-  let next=z.index+z.dir;
-  if(next<0||next>=z.way.length-1){z.dir*=-1;next=z.index+z.dir}
-  const a=z.way[z.index],b=z.way[z.index+1];
-  const dx=b.lon-a.lon,dy=b.lat-a.lat,len=Math.hypot(dx,dy)||1;
-  const segmentRemaining=z.dir>0?(1-z.t)*len:z.t*len;
-  const step=Math.min(remaining,segmentRemaining);
-  z.t+=z.dir*(step/len);
-  remaining-=step;
-  if(z.t>=1){z.index++;z.t=0}
-  else if(z.t<=0){z.index--;z.t=1}
-  if(z.index<0){z.index=0;z.t=0;z.dir=1;break}
-  if(z.index>=z.way.length-1){z.index=z.way.length-2;z.t=1;z.dir=-1;break}
+ let distance=.0000065*speed,guard=0;
+ while(distance>0&&guard++<10){
+  const nextIndex=z.index+z.dir;
+  if(nextIndex<0||nextIndex>=z.way.length-1){z.dir*=-1;continue}
+  const a=z.way[z.index],b=z.way[z.index+1],length=Math.hypot(b.lon-a.lon,b.lat-a.lat)||1;
+  const available=z.dir>0?(1-z.t)*length:z.t*length;
+  const step=Math.min(distance,available);
+  z.t+=z.dir*step/length;distance-=step;
+  if(z.t>=1){z.t=0;z.index++}
+  else if(z.t<=0){z.t=1;z.index--}
  }
- const a=z.way[z.index],b=z.way[z.index+1];
- const nextLat=a.lat+(b.lat-a.lat)*z.t,nextLng=a.lon+(b.lon-a.lon)*z.t;
- const hit=barrierObjects.some(bar=>map.distance([nextLat,nextLng],bar.center)<13);
+ z.index=Math.max(0,Math.min(z.way.length-2,z.index));
+ const a=z.way[z.index],b=z.way[z.index+1],nextLat=a.lat+(b.lat-a.lat)*z.t,nextLng=a.lon+(b.lon-a.lon)*z.t;
+ const hit=barrierObjects.some(bar=>map.distance([nextLat,nextLng],bar.center)<22);
  if(hit){z.dir*=-1;z.t=z.dir>0?0:1;const p=z.way[z.index];z.lat=p.lat;z.lng=p.lon;z.marker.setLatLng([z.lat,z.lng]);return}
  z.lat=nextLat;z.lng=nextLng;z.marker.setLatLng([z.lat,z.lng]);
 }
@@ -157,14 +183,25 @@ function spawnPeople(){for(let i=0;i<42;i++){let lat=40.6333+(Math.random()-.5)*
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{mode=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x===b));log('Herramienta seleccionada: '+labels[mode]+'.')});
 map.on('click',e=>{let c=costs[mode]||0;if(money<c){log('Presupuesto insuficiente.','alert');return}if(mode==='move'){log('Selecciona un punto de destino para el movimiento civil.');return}if(mode==='air'&&!running){log('El apoyo aéreo se desbloquea al iniciar el brote.','alert');return}money-=c;let m;if(mode==='safe'||mode==='shelter'){let circle=L.circle(e.latlng,{radius:110,color:'#61d6ff',fillColor:'#61d6ff',fillOpacity:.14,weight:2}).addTo(map);markers.push(circle);safe.push(e.latlng);log('Perímetro seguro establecido.','good')}else if(mode==='barricade'){
  let nearest=null,best=Infinity,point=map.latLngToLayerPoint(e.latlng);
- roadWays.forEach(way=>{for(let i=0;i<way.length-1;i++){const p1=map.latLngToLayerPoint([way[i].lat,way[i].lon]),p2=map.latLngToLayerPoint([way[i+1].lat,way[i+1].lon]);const vx=p2.x-p1.x,vy=p2.y-p1.y,l2=vx*vx+vy*vy||1;const t=Math.max(0,Math.min(1,((point.x-p1.x)*vx+(point.y-p1.y)*vy)/l2));const px=p1.x+t*vx,py=p1.y+t*vy,d=Math.hypot(point.x-px,point.y-py);if(d<best){best=d;nearest={x:vx,y:vy,center:map.layerPointToLatLng([px,py])}}}});
- if(!nearest){money+=c;log('No hay calles cargadas para orientar la barrera.','alert');update();return}
- const len=Math.hypot(nearest.x,nearest.y)||1,nx=-nearest.y/len,ny=nearest.x/len,center=map.latLngToLayerPoint(nearest.center),half=23;
+ roadWays.forEach(way=>{for(let i=0;i<way.length-1;i++){
+  const p1=map.latLngToLayerPoint([way[i].lat,way[i].lon]),p2=map.latLngToLayerPoint([way[i+1].lat,way[i+1].lon]);
+  const vx=p2.x-p1.x,vy=p2.y-p1.y,l2=vx*vx+vy*vy||1;
+  const t=Math.max(0,Math.min(1,((point.x-p1.x)*vx+(point.y-p1.y)*vy)/l2));
+  const px=p1.x+t*vx,py=p1.y+t*vy,d=Math.hypot(point.x-px,point.y-py);
+  if(d<best){best=d;nearest={x:vx,y:vy,center:map.layerPointToLatLng([px,py])}}
+ }});
+ if(!nearest||best>85){money+=c;log('Acércate a una calle y coloca la barrera a menos de 85 px de ella.','alert');update();return}
+ const len=Math.hypot(nearest.x,nearest.y)||1,nx=-nearest.y/len,ny=nearest.x/len;
+ const center=map.latLngToLayerPoint(nearest.center),half=31;
  const pA=map.layerPointToLatLng([center.x+nx*half,center.y+ny*half]),pB=map.layerPointToLatLng([center.x-nx*half,center.y-ny*half]);
- const line=L.polyline([pA,pB],{color:'#ffbd59',weight:11,opacity:.95,lineCap:'square'}).addTo(map);
- const edge=L.polyline([pA,pB],{color:'#fff0c9',weight:2,opacity:.9,dashArray:'5 5',interactive:false}).addTo(map);
- m=L.circleMarker(nearest.center,{radius:4,color:'#fff0c9',fillColor:'#ffbd59',fillOpacity:1,weight:1}).addTo(map);
- markers.push(line,edge,m);barrierObjects.push({center:nearest.center,line,edge,marker:m});barricades.push(nearest.center);log('Barrera desplegada atravesando la calle. Bloquea el paso de infectados.','good')
+ const shadow=L.polyline([pA,pB],{color:'#000000',weight:16,opacity:.65,lineCap:'square',interactive:false}).addTo(map);
+ const line=L.polyline([pA,pB],{color:'#ffad42',weight:10,opacity:1,lineCap:'square'}).addTo(map);
+ const edge=L.polyline([pA,pB],{color:'#fff0c9',weight:2,opacity:.95,dashArray:'5 4',interactive:false}).addTo(map);
+ m=L.circleMarker(nearest.center,{radius:5,color:'#fff0c9',fillColor:'#ffbd59',fillOpacity:1,weight:1}).addTo(map);
+ markers.push(shadow,line,edge,m);
+ barrierObjects.push({center:nearest.center,a:pA,b:pB,line,edge,marker:m});
+ barricades.push(nearest.center);
+ log('BARRERA COLOCADA · paso bloqueado en esta calle.','good')
 }else if(mode==='evac'){m=put(e.latlng,'#61d6ff','E','Punto de evacuación');markers.push(m);log('Punto de evacuación habilitado.','good')}else if(mode==='air'){m=L.circle(e.latlng,{radius:180,color:'#ff625d',fillColor:'#ff625d',fillOpacity:.25}).addTo(map);markers.push(m);infected=Math.max(0,infected-3);log('Ataque aéreo ejecutado.','alert')}else if(['sniper','turret','mortar','guard'].includes(mode)){m=put(e.latlng,'#f2bd61','◆',labels[mode]);markers.push(m);units.push({lat:e.latlng.lat,lng:e.latlng.lng,type:mode});log(labels[mode]+' desplegado.','good')}else{m=put(e.latlng,'#a5e87a','+',labels[mode]);markers.push(m);log(labels[mode]+' instalado.','good')}update()});
 $('start').onclick=async()=>{
  if(running)return;
