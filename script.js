@@ -15,14 +15,35 @@ const typeNames={landing:'Landing page',business:'Web para empresa',store:'Tiend
 const designNames={standard:'Limpio y profesional',premium:'Premium a medida',art:'Dirección creativa avanzada'};
 function getQuote(){
  const type=$('#projectType').value,pages=Number($('#pages').value),design=$('#design').value;
- const extras=$$('input[name="features"]:checked',form).reduce((sum,input)=>sum+Number(input.dataset.price),0);
+ const extras=$('input[name="features"]:checked',form).reduce((sum,input)=>sum+Number(input.dataset.price),0);
  const factor={standard:.85,premium:1.18,art:1.5}[design];
  const pageCost=type==='landing'?0:Math.max(0,pages-1)*(pageFactors[type]||120);
  const raw=(basePrices[type]+pageCost+extras)*factor;
  const low=Math.max(350,Math.round(raw*.88/50)*50),high=Math.max(500,Math.round(raw*1.18/50)*50);
- return{low,high,type,pages,design,features:$$('input[name="features"]:checked',form).map(i=>i.value),details:$('#details').value.trim()};
+ const includeDomain=$('#includeDomain')?.checked||false;
+ const extension=$('#domainExtension')?.value||'com';
+ const provider=$('#emailProvider')?.value||'google';
+ return{low,high,type,pages,design,features:$('input[name="features"]:checked',form).map(i=>i.value),details:$('#details').value.trim(),includeDomain,extension,provider};
 }
-function updateQuote(){const q=getQuote();range.textContent=euro(q.low)+' – '+euro(q.high);note.textContent='Estimación orientativa, sin IVA · '+(q.features.length?q.features.length+' extras seleccionados':'sin extras adicionales');return q;}
+function updateDomainCosts(q){
+ const options=$('#domainAddonOptions');if(!options)return;
+ options.hidden=!q.includeDomain;if(!q.includeDomain)return;
+ const domain=q.extension==='es'?{first:7.25,renew:8.46}:{first:9.67,renew:16.32};
+ const email=q.provider==='google'?{first:81.60,renew:81.60,label:'Google Workspace Starter · 1 usuario'}:{first:0,renew:0,label:'Zoho Mail gratuito · sujeto a disponibilidad'};
+ $('#domainFirstYear').textContent=euro(domain.first);
+ $('#emailFirstYear').textContent=email.first===0?'0 €':euro(email.first)+' / año';
+ $('#domainTotalFirst').textContent=euro(domain.first+email.first);
+ $('#domainRenewalTotal').textContent=euro(domain.renew+email.renew)+' / año';
+ $('#domainCostNote').textContent='Correo: '+email.label+'. Google Workspace: 6,80 €/usuario/mes con compromiso anual. Dominio: tarifa publicada por OVHcloud, IVA incluido. Precios sujetos a cambios.';
+ const google=q.provider==='google';
+ $('#domainProviderLinks').innerHTML='<a href="https://www.ovhcloud.com/es-es/domains/" target="_blank" rel="noopener noreferrer">Ver dominios en OVHcloud ↗</a>'+
+ (google?'<a href="https://workspace.google.com/intl/es/business/" target="_blank" rel="noopener noreferrer">Ver Google Workspace ↗</a>':'<a href="https://www.zoho.com/mail/zohomail-pricing.html" target="_blank" rel="noopener noreferrer">Ver Zoho Mail ↗</a>');
+}
+function updateQuote(){
+ const q=getQuote();range.textContent=euro(q.low)+' – '+euro(q.high);
+ note.textContent='Estimación orientativa, sin IVA · '+(q.features.length?q.features.length+' extras seleccionados':'sin extras adicionales');
+ updateDomainCosts(q);return q;
+}
 form.addEventListener('input',updateQuote);form.addEventListener('change',updateQuote);updateQuote();
 function quoteSummary(q){return['PROYECTO: '+typeNames[q.type],'PÁGINAS: '+q.pages,'DISEÑO: '+designNames[q.design],'FUNCIONALIDADES: '+(q.features.join(', ')||'No especificadas'),'DETALLES: '+(q.details||'Pendiente de definir'),'ESTIMACIÓN: '+euro(q.low)+' – '+euro(q.high)+' (sin IVA, orientativa)'].join('\n');}
 $('#copyQuote').addEventListener('click',async()=>{const b=$('#copyQuote');try{await navigator.clipboard.writeText(quoteSummary(getQuote()));b.textContent='Resumen copiado ✓';setTimeout(()=>b.textContent='Copiar resumen',1800);}catch{b.textContent='No se pudo copiar';}});
