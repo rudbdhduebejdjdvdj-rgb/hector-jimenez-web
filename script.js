@@ -53,6 +53,30 @@ if(revealObserver){revealNodes.forEach(el=>{el.classList.add('reveal');revealObs
 (()=>{
  const launcher=$('#petLauncher'),panel=$('#petPanel'),close=$('#petClose'),petForm=$('#petForm'),input=$('#petInput'),messages=$('#petMessages'),send=$('#petSend');
  if(!launcher||!panel||!petForm)return;
+
+ // Piña sigue el cursor con los ojos y se inclina suavemente hacia él.
+ const petFace=launcher.querySelector('.pet-face');
+ if(petFace && window.matchMedia('(pointer:fine)').matches){
+  const eyes=[...petFace.querySelectorAll('.pet-eye')];
+  let frame=0,lastX=0,lastY=0;
+  document.addEventListener('mousemove',event=>{
+   lastX=event.clientX;lastY=event.clientY;
+   if(frame)return;
+   frame=requestAnimationFrame(()=>{
+    frame=0;
+    const rect=petFace.getBoundingClientRect();
+    const dx=(lastX-(rect.left+rect.width/2))/(window.innerWidth/2);
+    const dy=(lastY-(rect.top+rect.height/2))/(window.innerHeight/2);
+    const x=Math.max(-1,Math.min(1,dx)),y=Math.max(-1,Math.min(1,dy));
+    eyes.forEach(eye=>{eye.style.transform='translate('+x*3+'px,'+y*2.5+'px)';});
+    petFace.style.setProperty('--look-x',(x*2.5)+'px');
+    petFace.style.setProperty('--look-y',(y*2)+'px');
+    petFace.classList.toggle('pet-looking',Math.hypot(lastX-(rect.left+rect.width/2),lastY-(rect.top+rect.height/2))<190);
+   });
+  },{passive:true});
+  launcher.addEventListener('mouseleave',()=>{eyes.forEach(eye=>eye.style.transform='');petFace.classList.remove('pet-looking');});
+ }
+
  const open=()=>{panel.hidden=false;launcher.setAttribute('aria-expanded','true');input.focus();};
  const shut=()=>{panel.hidden=true;launcher.setAttribute('aria-expanded','false');};
  launcher.addEventListener('click',()=>panel.hidden?open():shut());close.addEventListener('click',shut);
