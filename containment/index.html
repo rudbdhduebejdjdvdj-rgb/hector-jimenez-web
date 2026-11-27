@@ -19,18 +19,20 @@ const osmLog=(msg,type='')=>log('[MAP] '+msg,type);
 function clearBuildingLayer(){buildingLayer.clearLayers()}
 function drawBuildings(){
  clearBuildingLayer();
- buildingData.forEach((b,bi)=>{
+ if(map.getZoom()<14)return;
+ const scale=Math.pow(2,map.getZoom()-15);
+ buildingData.forEach(b=>{
   if(!b.geometry||b.geometry.length<4)return;
-  const h=Math.max(7,Math.min(42,(Number(b.tags?.height)||((Number(b.tags?.['building:levels'])||2)*3.2))*Math.pow(2,map.getZoom()-15)*.72));
+  const raw=Number(String(b.tags?.height||'').replace(/[^0-9.]/g,''))||((Number(b.tags?.['building:levels'])||2)*3.4);
+  const h=Math.max(9,Math.min(58,raw*scale*.9));
   const base=b.geometry.map(p=>map.latLngToContainerPoint([p.lat,p.lon]));
   const top=base.map(p=>L.point(p.x,p.y-h));
   const toLL=p=>map.containerPointToLatLng(p);
-  for(let i=0;i<base.length-1;i++){
-   const j=i+1;
-   const shade= i%2 ? '#657783' : '#82919a';
-   L.polygon([toLL(base[i]),toLL(base[j]),toLL(top[j]),toLL(top[i])],{color:'#26343d',weight:.5,fillColor:shade,fillOpacity:.9,interactive:false}).addTo(buildingLayer);
+  for(let i=0;i<base.length;i++){
+   const j=(i+1)%base.length;
+   L.polygon([toLL(base[i]),toLL(base[j]),toLL(top[j]),toLL(top[i])],{stroke:true,color:'#17232b',weight:1,fillColor:i%2?'#536875':'#71838d',fillOpacity:.96,interactive:false}).addTo(buildingLayer);
   }
-  L.polygon(top.map(toLL),{color:'#d0d9dc',weight:.8,fillColor:'#b9c5c9',fillOpacity:.95,interactive:false}).addTo(buildingLayer);
+  L.polygon(top.map(toLL),{stroke:true,color:'#e2eaed',weight:1,fillColor:'#c5d0d5',fillOpacity:1,interactive:false}).addTo(buildingLayer);
  });
 }
 async function loadCityData(){
@@ -52,26 +54,44 @@ async function loadCityData(){
 function zombieSize(){return Math.max(6,Math.min(25,8*Math.pow(1.34,map.getZoom()-15)))}
 function zombieIcon(){const z=zombieSize();return L.divIcon({className:'',html:'<div style="width:'+z+'px;height:'+z+'px;border-radius:50%;background:#35e56a;border:1.5px solid #eaffee;box-shadow:0 0 7px #35e56a99"></div>',iconSize:[z,z],iconAnchor:[z/2,z/2]})}
 function spawnZombie(){
- let way=roadWays.length?roadWays[Math.floor(Math.random()*roadWays.length)]:null;
- if(way&&way.length>1){let idx=Math.floor(Math.random()*(way.length-1));let p=way[idx];let z={lat:p.lat,lng:p.lon,way,index:idx,dir:Math.random()<.5?1:-1,marker:null};z.marker=L.marker([z.lat,z.lng],{icon:zombieIcon(),zIndexOffset:800}).addTo(map).bindTooltip('Infectado');zombies.push(z);markers.push(z.marker)}
- else{let lat=40.6333+(Math.random()-.5)*.012,lng=-3.1667+(Math.random()-.5)*.015;let z={lat,lng,way:null,index:0,dir:1,marker:L.marker([lat,lng],{icon:zombieIcon(),zIndexOffset:800}).addTo(map).bindTooltip('Infectado')};zombies.push(z);markers.push(z.marker)}
+ if(!roadWays.length){osmLog('No hay calles cargadas: no se genera ningún zombi fuera de la red vial.','alert');return false}
+ const way=roadWays[Math.floor(Math.random()*roadWays.length)];
+ const idx=Math.floor(Math.random()*(way.length-1));
+ const a=way[idx],b=way[idx+1],t=Math.random();
+ const z={way,index:idx,t,dir:Math.random()<.5?1:-1,marker:null,lat:a.lat+(b.lat-a.lat)*t,lng:a.lon+(b.lon-a.lon)*t};
+ z.marker=L.marker([z.lat,z.lng],{icon:zombieIcon(),zIndexOffset:800}).addTo(map).bindTooltip('Infectado · red vial');
+ zombies.push(z);markers.push(z.marker);return true;
 }
 function moveZombieOnStreet(z){
  if(!z.way||z.way.length<2)return;
- let next=z.index+z.dir;if(next<0||next>=z.way.length){z.dir*=-1;next=z.index+z.dir}
- const a=z.way[z.index],b=z.way[next],pa=map.latLngToContainerPoint([a.lat,a.lon]),pb=map.latLngToContainerPoint([b.lat,b.lon]);
- const dx=pb.x-pa.x,dy=pb.y-pa.y,len=Math.hypot(dx,dy)||1,step=Math.min(1,(.65*speed)/len);
- const cur=map.latLngToContainerPoint([z.lat,z.lng]),nx=cur.x+dx/len*.65*speed,ny=cur.y+dy/len*.65*speed;
- if(Math.hypot(pb.x-nx,pb.y-ny)<1.5){z.index=next;z.lat=b.lat;z.lng=b.lon}else{const ll=map.containerPointToLatLng([nx,ny]);z.lat=ll.lat;z.lng=ll.lng}
+ let remaining=.0000065*speed;
+ let guard=0;
+ while(remaining>0&&guard++<8){
+  let next=z.index+z.dir;
+  if(next<0||next>=z.way.length-1){z.dir*=-1;next=z.index+z.dir}
+  const a=z.way[z.index],b=z.way[z.index+1];
+  const dx=b.lon-a.lon,dy=b.lat-a.lat,len=Math.hypot(dx,dy)||1;
+  const segmentRemaining=z.dir>0?(1-z.t)*len:z.t*len;
+  const step=Math.min(remaining,segmentRemaining);
+  z.t+=z.dir*(step/len);
+  remaining-=step;
+  if(z.t>=1){z.index++;z.t=0}
+  else if(z.t<=0){z.index--;z.t=1}
+  if(z.index<0){z.index=0;z.t=0;z.dir=1;break}
+  if(z.index>=z.way.length-1){z.index=z.way.length-2;z.t=1;z.dir=-1;break}
+ }
+ const a=z.way[z.index],b=z.way[z.index+1];
+ z.lat=a.lat+(b.lat-a.lat)*z.t;z.lng=a.lon+(b.lon-a.lon)*z.t;
  z.marker.setLatLng([z.lat,z.lng]);
-}const costs={sniper:160,turret:240,mortar:210,guard:130,shelter:100,hospital:180,depot:140,air:180,evac:120,barricade:45,safe:0,move:0};const labels={sniper:'Francotirador',turret:'Torreta',mortar:'Morteros',guard:'Guarnición',shelter:'Refugio',hospital:'Hospital',depot:'Depósito',air:'Ataque aéreo',evac:'Evacuación',barricade:'Barricada',safe:'Zona segura',move:'Movimiento civil'};const log=(s,t='')=>{let d=document.createElement('div');d.textContent='['+new Date().toLocaleTimeString('es-ES')+'] '+s;if(t)d.className=t;$('feed').prepend(d)};const icon=(color,txt)=>L.divIcon({className:'',html:'<div style="width:19px;height:19px;border-radius:50%;background:'+color+';border:2px solid #fff;box-shadow:0 1px 8px #000b;color:#071016;font-weight:900;font-size:10px;display:grid;place-items:center">'+txt+'</div>',iconSize:[19,19],iconAnchor:[9,9]});const put=(latlng,color,txt,title)=>L.marker(latlng,{icon:icon(color,txt)}).addTo(map).bindTooltip(title);
+}
+const costs={sniper:160,turret:240,mortar:210,guard:130,shelter:100,hospital:180,depot:140,air:180,evac:120,barricade:45,safe:0,move:0};const labels={sniper:'Francotirador',turret:'Torreta',mortar:'Morteros',guard:'Guarnición',shelter:'Refugio',hospital:'Hospital',depot:'Depósito',air:'Ataque aéreo',evac:'Evacuación',barricade:'Barricada',safe:'Zona segura',move:'Movimiento civil'};const log=(s,t='')=>{let d=document.createElement('div');d.textContent='['+new Date().toLocaleTimeString('es-ES')+'] '+s;if(t)d.className=t;$('feed').prepend(d)};const icon=(color,txt)=>L.divIcon({className:'',html:'<div style="width:19px;height:19px;border-radius:50%;background:'+color+';border:2px solid #fff;box-shadow:0 1px 8px #000b;color:#071016;font-weight:900;font-size:10px;display:grid;place-items:center">'+txt+'</div>',iconSize:[19,19],iconAnchor:[9,9]});const put=(latlng,color,txt,title)=>L.marker(latlng,{icon:icon(color,txt)}).addTo(map).bindTooltip(title);
 map.on('zoomend',()=>{drawBuildings();const zi=zombieIcon();zombies.forEach(z=>z.marker.setIcon(zi));});map.on('moveend',()=>{const c=map.getCenter();if(!lastOsmCenter||map.distance(c,lastOsmCenter)>350){lastOsmCenter=c;loadCityData()}else drawBuildings()});setTimeout(()=>{lastOsmCenter=map.getCenter();loadCityData()},500);
 function update(){ $('money').textContent='€'+money.toLocaleString('es-ES');$('civ').textContent=alive;$('inf').textContent=infected;$('unitCount').textContent=units.length;$('state').textContent=running?(paused?'PAUSADO':'BROTE ACTIVO'):'PREPARACIÓN';$('day').textContent=String(day).padStart(2,'0')}
 function clearAll(){markers.forEach(m=>map.removeLayer(m));markers=[];units=[];people=[];zombies=[];safe=[];barricades=[];money=1200;alive=180;infected=0;running=false;paused=false;day=1;update();log('Sector reiniciado.')}
 function spawnPeople(){for(let i=0;i<42;i++){let lat=40.6333+(Math.random()-.5)*.018,lng=-3.1667+(Math.random()-.5)*.024;people.push({lat,lng,alive:true});markers.push(put([lat,lng],'#f4f7f8','', 'Civil'))}}
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{mode=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x===b));log('Herramienta seleccionada: '+labels[mode]+'.')});
 map.on('click',e=>{let c=costs[mode]||0;if(money<c){log('Presupuesto insuficiente.','alert');return}if(mode==='move'){log('Selecciona un punto de destino para el movimiento civil.');return}if(mode==='air'&&!running){log('El apoyo aéreo se desbloquea al iniciar el brote.','alert');return}money-=c;let m;if(mode==='safe'||mode==='shelter'){let circle=L.circle(e.latlng,{radius:110,color:'#61d6ff',fillColor:'#61d6ff',fillOpacity:.14,weight:2}).addTo(map);markers.push(circle);safe.push(e.latlng);log('Perímetro seguro establecido.','good')}else if(mode==='barricade'){m=put(e.latlng,'#d7a64e','▰','Barricada');markers.push(m);barricades.push(e.latlng);log('Barricada desplegada.','good')}else if(mode==='evac'){m=put(e.latlng,'#61d6ff','E','Punto de evacuación');markers.push(m);log('Punto de evacuación habilitado.','good')}else if(mode==='air'){m=L.circle(e.latlng,{radius:180,color:'#ff625d',fillColor:'#ff625d',fillOpacity:.25}).addTo(map);markers.push(m);infected=Math.max(0,infected-3);log('Ataque aéreo ejecutado.','alert')}else if(['sniper','turret','mortar','guard'].includes(mode)){m=put(e.latlng,'#f2bd61','◆',labels[mode]);markers.push(m);units.push({lat:e.latlng.lat,lng:e.latlng.lng,type:mode});log(labels[mode]+' desplegado.','good')}else{m=put(e.latlng,'#a5e87a','+',labels[mode]);markers.push(m);log(labels[mode]+' instalado.','good')}update()});
-$('start').onclick=()=>{if(running)return;running=true;paused=false;day=1;infected=8;for(let i=0;i<8;i++)spawnZombie();log('ALERTA ROJA: brote detectado en Guadalajara.','alert');update();if(timer)clearInterval(timer);timer=setInterval(()=>{if(!running||paused)return;day+=.04;let active=zombies.length;infected=Math.max(0,Math.round(active));let protectedCount=safe.length*5;alive=Math.max(0,180-Math.floor(day*2)+protectedCount);if(Math.random()<.25&&zombies.length<45)spawnZombie();zombies.forEach(moveZombieOnStreet);if(day>=10||alive<=0){running=false;log('Fin de jornada. Revisa el perímetro y reorganiza las defensas.','alert')}update()},1200)};
+$('start').onclick=async()=>{if(running)return;if(!roadWays.length){log('Cargando calles de Guadalajara antes de iniciar el brote…');await loadCityData()}if(!roadWays.length){log('No se inicia: OpenStreetMap no ha devuelto calles. Reintenta en unos segundos.','alert');return}running=true;paused=false;day=1;infected=0;for(let i=0;i<8;i++)spawnZombie();infected=zombies.length;log('ALERTA ROJA: brote detectado. Los infectados solo avanzan por calles cargadas.','alert');update();if(timer)clearInterval(timer);timer=setInterval(()=>{if(!running||paused)return;day+=.04;if(Math.random()<.25&&zombies.length<45)spawnZombie();zombies.forEach(moveZombieOnStreet);infected=zombies.length;let protectedCount=safe.length*5;alive=Math.max(0,180-Math.floor(day*2)+protectedCount);if(day>=10||alive<=0){running=false;log('Fin de jornada. Revisa el perímetro y reorganiza las defensas.','alert')}update()},1200)};
 $('pause').onclick=()=>{paused=!paused;log(paused?'Operación pausada.':'Operación reanudada.');update()};$('speed').onclick=()=>{speed=speed===1?2:speed===2?3:1;$('speed').textContent='VELOCIDAD ×'+speed};$('reset').onclick=()=>{if(timer)clearInterval(timer);clearAll();spawnPeople()};spawnPeople();update();
 })();
 </script></body></html>
