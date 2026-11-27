@@ -119,3 +119,6 @@ body{background:var(--paper);color:var(--ink)}
 @keyframes petSpark{from{transform:rotate(-12deg) scale(.9)}to{transform:rotate(18deg) scale(1.18)}}
 @keyframes petHello{0%,100%{rotate:0deg}25%{rotate:-9deg}70%{rotate:7deg}}
 @media(prefers-reduced-motion:reduce){.pet-face,.pet-face .pet-eye{transition:none}.pet-launcher:hover .pet-face{animation:none}}
+
+/* Crowdfunding announcement ribbon */
+.crowdfund-ribbon{position:relative;z-index:31;min-height:38px;padding:9px 5vw;display:flex;align-items:center;justify-content:center;gap:14px;background:#e8ddf1;color:#40364e;font:8px var(--mono);letter-spacing:.13em;text-align:center}.crowdfund-pulse{width:7px;height:7px;border-radius:50%;background:#a98bc9;box-shadow:0 0 0 4px #a98bc925}.crowdfund-ribbon a{font-weight:700;color:#80649f;text-decoration:none}.crowdfund-ribbon a b{font-size:12px;margin-left:5px}@media(max-width:600px){.crowdfund-ribbon{font-size:7px;gap:8px;flex-wrap:wrap;padding:9px 12px}}
