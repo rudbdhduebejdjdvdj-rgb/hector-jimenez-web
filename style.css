@@ -63,3 +63,28 @@ a:hover img{transform:scale(1.025)}
 .motion-ready .motion-in:nth-child(5){transition-delay:.32s}
 @media(hover:hover){.service-card:hover,.principle:hover{transform:translateY(-4px)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}body{animation:none!important}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.motion-ready .motion-in,.motion-ready .motion-left,.motion-ready .motion-scale{opacity:1;transform:none}}
+
+
+/* Mobile-first visible motion: works without hover and on touch screens */
+@keyframes mobileRise{
+  0%{opacity:0;transform:translate3d(0,22px,0)}
+  100%{opacity:1;transform:translate3d(0,0,0)}
+}
+@keyframes mobileImageReveal{
+  0%{opacity:0;clip-path:inset(8% 0 0 0);transform:scale(1.025)}
+  100%{opacity:1;clip-path:inset(0);transform:scale(1)}
+}
+@media(max-width:760px){
+  body{animation:pageEnter .55s ease both}
+  .home-copy .eyebrow,.subpage>.eyebrow{animation:mobileRise .65s .05s both}
+  .home-copy h1,.subpage h1{animation:mobileRise .75s .12s both}
+  .home-copy>p,.page-lead{animation:mobileRise .75s .2s both}
+  .home-copy .hero-actions,.home-email{animation:mobileRise .75s .28s both}
+  .home-image,.project-visual,.portfolio-grid article img{animation:mobileImageReveal .9s .18s both}
+  .home-intro,.home-projects,.home-contact,.subpage>.simple-list,.subpage>.portfolio-grid,.subpage>.plans,.study-section,.agent-row,.principle,.flowstep{animation:mobileRise .7s ease both}
+  .mini-projects>a,.plans article,.portfolio-grid article,.service-card,.simple-list article{transition:transform .3s ease,box-shadow .3s ease}
+  .mini-projects>a:active,.plans article:active,.portfolio-grid article:active,.service-card:active{transform:scale(.985)}
+  .button:active,.nav-cta:active{transform:scale(.97)}
+  .motion-ready .motion-in{transform:translate3d(0,18px,0)}
+  .motion-ready .motion-in.is-visible{transform:translate3d(0,0,0)}
+}
