@@ -109,3 +109,13 @@ body{background:var(--paper);color:var(--ink)}
 .pet-messages{padding:16px;display:flex;flex-direction:column;gap:10px;overflow:auto;flex:1;background:radial-gradient(circle at 100% 0,#f7eff8 0,transparent 35%),#fffdfd}.pet-message{max-width:92%;padding:11px 13px;border-radius:14px;font-size:11px;line-height:1.7;white-space:pre-wrap}.pet-bot{align-self:flex-start;background:#f1ebf7;color:#4e435b;border-bottom-left-radius:4px}.pet-user{align-self:flex-end;background:#e8e0f3;color:#42384e;border-bottom-right-radius:4px}.pet-analysis{border:1px solid #e3d6ed;background:#faf6fb}.pet-suggestions{display:flex;gap:6px;flex-wrap:wrap}.pet-suggestions button,.pet-estimator-link{border:1px solid #ddcfe9;background:#fff;color:#715b8b;border-radius:999px;padding:8px 10px;font-size:9px;cursor:pointer}.pet-suggestions button:hover,.pet-estimator-link:hover{background:#f3ebf8}.pet-estimator-link{align-self:flex-start;border-radius:8px;font-weight:700}
 .pet-compose{display:flex;gap:8px;padding:12px;border-top:1px solid #eee6f1;background:#fff}.pet-compose textarea{resize:none;flex:1;border:1px solid #e4dbe9;border-radius:12px;padding:10px;font:11px/1.5 var(--sans);outline:none;color:#393246}.pet-compose textarea:focus{border-color:#b9a1d6}.pet-compose button{width:38px;height:38px;border:0;border-radius:12px;background:#d9c9f3;color:#42384e;font-size:20px;cursor:pointer}.pet-compose button:disabled{opacity:.5}.pet-footnote{font-size:8px;color:#968c9c;text-align:center;margin:0;padding:0 8px 10px;background:#fff}
 @media(max-width:600px){.quote-pet{right:13px;bottom:14px}.pet-launcher{padding:7px 12px 7px 7px}.pet-face{width:42px;height:42px}.pet-launcher-label{font-size:10px}.pet-panel{bottom:61px;right:0;height:min(490px,calc(100dvh - 90px))}}
+
+/* Reacción al cursor: mirada, inclinación y pequeño rebote */
+.pet-face{transition:transform .18s ease-out;will-change:transform}
+.pet-face .pet-eye{transition:transform .12s ease-out}
+.pet-face.pet-looking{transform:translate(var(--look-x,0),var(--look-y,0)) rotate(0deg) scale(1.055)}
+.pet-face.pet-looking .pet-spark{animation:petSpark .7s ease-in-out infinite alternate}
+.pet-launcher:hover .pet-face{animation:petHello .55s ease-in-out}
+@keyframes petSpark{from{transform:rotate(-12deg) scale(.9)}to{transform:rotate(18deg) scale(1.18)}}
+@keyframes petHello{0%,100%{rotate:0deg}25%{rotate:-9deg}70%{rotate:7deg}}
+@media(prefers-reduced-motion:reduce){.pet-face,.pet-face .pet-eye{transition:none}.pet-launcher:hover .pet-face{animation:none}}
