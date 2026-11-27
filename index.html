@@ -47,6 +47,27 @@
 <div class="quote-result" aria-live="polite"><div><span>ESTIMACIÓN INICIAL</span><strong id="quoteRange">1.200 € – 1.800 €</strong><small id="quoteNote">Estimación orientativa, sin IVA.</small></div><div class="quote-spark">↗</div></div>
 <div class="form-actions"><button class="button button-dark" type="submit" id="aiQuoteButton">Analizar con IA <span>✳</span></button><button class="button button-quiet" type="button" id="copyQuote">Copiar resumen</button></div>
 <div class="ai-result" id="aiResult" hidden><div class="ai-result-head"><span>✳ ANÁLISIS DEL PROYECTO</span><span class="ai-status" id="aiStatus">IA</span></div><div id="aiText"></div></div>
+<div class="domain-addon" id="domainAddon">
+ <div class="domain-addon-head"><div><span class="addon-kicker">EXTRAS / INFRAESTRUCTURA</span><h3>¿Quieres dominio y correo profesional?</h3><p>Añade un dominio propio y elige dónde gestionar tu correo. Puedes usar Gmail con Google Workspace o una alternativa gratuita.</p></div><label class="addon-toggle"><input type="checkbox" id="includeDomain"><span>Añadir</span></label></div>
+ <div class="domain-addon-options" id="domainAddonOptions" hidden>
+  <div class="form-row">
+   <div class="form-group"><label for="domainExtension">Extensión del dominio</label><select id="domainExtension"><option value="com">.com</option><option value="es">.es</option></select></div>
+   <div class="form-group"><label for="emailProvider">Servicio de correo</label><select id="emailProvider"><option value="google">Gmail profesional · Google Workspace</option><option value="zoho">Zoho Mail · gratuito</option></select></div>
+  </div>
+  <div class="domain-cost-card" aria-live="polite">
+   <div class="domain-cost-line"><span>Dominio · primer año</span><strong id="domainFirstYear">—</strong></div>
+   <div class="domain-cost-line"><span>Correo · primer año</span><strong id="emailFirstYear">—</strong></div>
+   <div class="domain-cost-line domain-cost-total"><span>Total estimado primer año</span><strong id="domainTotalFirst">—</strong></div>
+   <div class="domain-cost-line"><span>Coste anual posterior estimado</span><strong id="domainRenewalTotal">—</strong></div>
+   <p id="domainCostNote">Precios orientativos según tarifas publicadas. El precio final y los impuestos se confirman en cada proveedor.</p>
+  </div>
+  <div class="domain-provider-links" id="domainProviderLinks">
+   <a href="https://www.ovhcloud.com/es-es/domains/" target="_blank" rel="noopener noreferrer">Ver dominios en OVHcloud ↗</a>
+   <a href="https://workspace.google.com/intl/es/business/" target="_blank" rel="noopener noreferrer">Contratar Google Workspace ↗</a>
+  </div>
+  <p class="domain-smallprint">Google Workspace Starter: precio anual por usuario con compromiso anual; la opción flexible cuesta más. Zoho gratuito permite un dominio y hasta 5 usuarios en centros de datos admitidos, pero el acceso es web y no incluye IMAP/POP. La disponibilidad del plan gratuito puede variar.</p>
+ </div>
+</div>
 <p class="form-disclaimer">El cálculo es orientativo y no constituye una oferta vinculante. El presupuesto definitivo se confirma tras revisar requisitos, contenido, integraciones, plazos y mantenimiento.</p></form></div></div></section>
 <section class="contact-section section-shell" id="contact"><div class="contact-left"><div class="eyebrow">06 / CONTACTO</div><h2>Lo interesante<br><span class="serif">empieza hablando.</span></h2><p>Si tienes una idea, un negocio que necesita una mejor web o un proceso que te gustaría automatizar, cuéntamelo.</p><a class="contact-email" href="mailto:alejandro.87.estevez@gmail.com">alejandro.87.estevez@gmail.com <span>↗</span></a></div>
 <div class="contact-right"><div class="contact-card-top"><span>INICIAR CONVERSACIÓN</span><span>AE® / 2026</span></div><form id="contactForm"><label for="contactName">Tu nombre</label><input id="contactName" name="name" required placeholder="¿Cómo te llamas?"><label for="contactEmail">Tu email</label><input id="contactEmail" name="email" type="email" required placeholder="nombre@empresa.com"><label for="contactMessage">¿En qué estás pensando?</label><textarea id="contactMessage" name="message" rows="4" required placeholder="Cuéntame lo que necesitas..."></textarea><button class="button button-light" type="submit">Preparar mensaje <span>↗</span></button><small id="contactFeedback">Se abrirá tu aplicación de correo con el mensaje preparado.</small></form></div></section>
