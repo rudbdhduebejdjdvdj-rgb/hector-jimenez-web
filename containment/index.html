@@ -64,19 +64,31 @@ function drawBuildings(){
  }
 }
 async function loadCityData(){
- if(osmBusy||map.getZoom()<14)return;osmBusy=true;
+ if(osmBusy){while(osmBusy)await new Promise(resolve=>setTimeout(resolve,200));if(roadWays.length)return}
+ if(map.getZoom()<14)return;
+ osmBusy=true;
  try{
-  const b=map.getBounds().pad(.04),bbox=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(',');
-  const q='[out:json][timeout:15];(way["building"]('+bbox+');way["highway"~"residential|tertiary|secondary|primary|living_street|service|unclassified"]('+bbox+'););out body geom;';
+  const bounds=map.getBounds().pad(.08),bbox=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()].join(',');
+  const q='[out:json][timeout:25];(way["building"]('+bbox+');way["highway"]('+bbox+'););out body geom;';
   let data=null;
-  for(const endpoint of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
-   try{const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q)});if(res.ok){data=await res.json();break}}catch(e){}
+  const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+  for(const endpoint of endpoints){
+   try{
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),28000);
+    const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q),signal:controller.signal});
+    clearTimeout(timeout);
+    if(res.ok){const candidate=await res.json();if(candidate.elements){data=candidate;break}}
+   }catch(e){}
   }
   if(!data)throw new Error('Overpass no disponible');
-  buildingData=data.elements.filter(e=>e.tags?.building&&e.geometry?.length>=4).slice(0,900).map(e=>({geometry:e.geometry,tags:e.tags}));
-  roadWays=data.elements.filter(e=>e.tags?.highway&&e.geometry?.length>=2).map(e=>e.geometry.map(p=>({lat:p.lat,lon:p.lon})));
-  drawBuildings();osmLog(buildingData.length+' edificios 3D y '+roadWays.length+' tramos de calles cargados.','good');
- }catch(e){osmLog('No se pudieron descargar edificios/calles; se mantiene el mapa base.','alert')}
+  const elements=data.elements||[];
+  const newBuildings=elements.filter(e=>e.tags?.building&&e.geometry?.length>=4).map(e=>({geometry:e.geometry,tags:e.tags}));
+  const newRoads=elements.filter(e=>e.tags?.highway&&e.geometry?.length>=2).map(e=>e.geometry.map(p=>({lat:p.lat,lon:p.lon})));
+  if(newBuildings.length)buildingData=newBuildings.slice(0,900);
+  if(newRoads.length)roadWays=newRoads;
+  drawBuildings();
+  osmLog(buildingData.length+' edificios y '+roadWays.length+' tramos de calles cargados.','good');
+ }catch(e){osmLog('Fallo temporal al descargar calles. Se conservarán los datos anteriores y puedes volver a intentar.','alert')}
  finally{osmBusy=false}
 }
 function zombieSize(){return Math.max(6,Math.min(25,8*Math.pow(1.34,map.getZoom()-15)))}
@@ -131,7 +143,34 @@ map.on('click',e=>{let c=costs[mode]||0;if(money<c){log('Presupuesto insuficient
  m=L.circleMarker(nearest.center,{radius:4,color:'#fff0c9',fillColor:'#ffbd59',fillOpacity:1,weight:1}).addTo(map);
  markers.push(line,edge,m);barrierObjects.push({center:nearest.center,line,edge,marker:m});barricades.push(nearest.center);log('Barrera desplegada atravesando la calle. Bloquea el paso de infectados.','good')
 }else if(mode==='evac'){m=put(e.latlng,'#61d6ff','E','Punto de evacuación');markers.push(m);log('Punto de evacuación habilitado.','good')}else if(mode==='air'){m=L.circle(e.latlng,{radius:180,color:'#ff625d',fillColor:'#ff625d',fillOpacity:.25}).addTo(map);markers.push(m);infected=Math.max(0,infected-3);log('Ataque aéreo ejecutado.','alert')}else if(['sniper','turret','mortar','guard'].includes(mode)){m=put(e.latlng,'#f2bd61','◆',labels[mode]);markers.push(m);units.push({lat:e.latlng.lat,lng:e.latlng.lng,type:mode});log(labels[mode]+' desplegado.','good')}else{m=put(e.latlng,'#a5e87a','+',labels[mode]);markers.push(m);log(labels[mode]+' instalado.','good')}update()});
-$('start').onclick=async()=>{if(running)return;if(!roadWays.length){log('Cargando calles de Guadalajara antes de iniciar el brote…');await loadCityData()}if(!roadWays.length){log('No se inicia: OpenStreetMap no ha devuelto calles. Reintenta en unos segundos.','alert');return}running=true;paused=false;day=1;infected=0;for(let i=0;i<8;i++)spawnZombie();infected=zombies.length;log('ALERTA ROJA: brote detectado. Los infectados solo avanzan por calles cargadas.','alert');update();if(timer)clearInterval(timer);timer=setInterval(()=>{if(!running||paused)return;day+=.04;if(Math.random()<.25&&zombies.length<45)spawnZombie();zombies.forEach(moveZombieOnStreet);infected=zombies.length;let protectedCount=safe.length*5;alive=Math.max(0,180-Math.floor(day*2)+protectedCount);if(day>=10||alive<=0){running=false;log('Fin de jornada. Revisa el perímetro y reorganiza las defensas.','alert')}update()},1200)};
+$('start').onclick=async()=>{
+ if(running)return;
+ if(!roadWays.length){
+  log('Comprobando la red de calles…');
+  await loadCityData();
+ }
+ if(!roadWays.length){
+  log('El servidor de mapas sigue ocupado. Espera unos segundos y vuelve a iniciar.','alert');
+  return;
+ }
+ running=true;paused=false;day=1;infected=0;
+ for(let i=0;i<8;i++)spawnZombie();
+ infected=zombies.length;
+ log('ALERTA ROJA: brote detectado. Los infectados avanzan por la red vial.','alert');
+ update();
+ if(timer)clearInterval(timer);
+ timer=setInterval(()=>{
+  if(!running||paused)return;
+  day+=.04;
+  if(Math.random()<.25&&zombies.length<45)spawnZombie();
+  zombies.forEach(moveZombieOnStreet);
+  infected=zombies.length;
+  let protectedCount=safe.length*5;
+  alive=Math.max(0,180-Math.floor(day*2)+protectedCount);
+  if(day>=10||alive<=0){running=false;log('Fin de jornada. Revisa el perímetro y reorganiza las defensas.','alert')}
+  update()
+ },1200)
+}
 $('pause').onclick=()=>{paused=!paused;log(paused?'Operación pausada.':'Operación reanudada.');update()};$('speed').onclick=()=>{speed=speed===1?2:speed===2?3:1;$('speed').textContent='VELOCIDAD ×'+speed};$('reset').onclick=()=>{if(timer)clearInterval(timer);clearAll();spawnPeople()};spawnPeople();update();
 })();
 </script></body></html>
